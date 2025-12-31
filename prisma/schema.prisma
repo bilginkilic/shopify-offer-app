@@ -1,0 +1,68 @@
+// Prisma Schema for Shopify Offer App
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Session {
+  id          String    @id
+  shop        String
+  state       String
+  isOnline    Boolean   @default(false)
+  scope       String?
+  expires     DateTime?
+  accessToken String
+  userId      BigInt?
+  firstName   String?
+  lastName    String?
+  email       String?
+  accountOwner Boolean  @default(false)
+  locale      String?
+  collaborator Boolean? @default(false)
+  emailVerified Boolean? @default(false)
+}
+
+model Offer {
+  id              String      @id @default(cuid())
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  productId       String
+  productTitle    String
+  productImage    String?
+  variantId       String?
+  variantTitle    String?
+  originalPrice   Float
+  offerPrice      Float
+  quantity        Int         @default(1)
+  message         String?
+  status          String      @default("pending") // pending, accepted, rejected, countered
+  counterPrice    Float?
+  adminNotes      String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  logs            OfferLog[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([customerEmail])
+}
+
+model OfferLog {
+  id          String    @id @default(cuid())
+  offerId     String
+  offer       Offer     @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  action      String    // created, status_changed, price_updated, note_added
+  oldValue    String?
+  newValue    String?
+  performedBy String?   // admin, customer, system
+  createdAt   DateTime  @default(now())
+
+  @@index([offerId])
+  @@index([createdAt])
+}
